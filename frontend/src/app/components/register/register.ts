@@ -163,7 +163,7 @@ export class Register {
       next: () => {
         this.isLoading = false;
         this.successMessage = '¡Cuenta creada! Redirigiendo al login...';
-        setTimeout(() => this.router.navigate(['/login']), 2500);
+        setTimeout(() => this.router.navigate(['/login']), 2000);
       },
       error: (err) => {
         this.isLoading = false;
