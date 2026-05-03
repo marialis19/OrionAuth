@@ -1,0 +1,79 @@
+<div class="container">
+  <div class="card">
+
+    @if (authService.isLoggedIn()) {
+
+      <!-- Header -->
+      <div class="card-header">
+        <div class="avatar">
+          {{ username.charAt(0).toUpperCase() }} <!-- Muestra la primera letra del username como avatar --> 
+        </div>
+        <h2>Hola, {{ username }}</h2>
+        <p class="card-subtitle">Bienvenido de vuelta</p>
+      </div>
+
+      <!-- Estado -->
+      <div class="status success">
+        <span>●</span> Sesión activa
+      </div>
+
+      <!-- Info del perfil -->
+      @if (isLoadingProfile) {
+        <div class="loading">
+          <span class="spinner-dark"></span>
+          Cargando perfil...
+        </div>
+      }
+
+      @if (profile) {
+        <div class="info-box">
+          <div class="info-row">
+            <span class="info-label">Usuario</span>
+            <span class="info-value">{{ profile.username }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Email</span>
+            <span class="info-value">{{ profile.email }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Miembro desde</span>
+            <span class="info-value">{{ profile.date_joined }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Autenticación</span>
+            <span class="info-value">JWT ✓</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Hora de acceso</span>
+            <span class="info-value">{{ loginTime }}</span>
+          </div>
+        </div>
+      }
+
+      @if (profileError) {
+        <p class="error">{{ profileError }}</p>
+      }
+
+      <button class="btn-primary" (click)="logout()">
+        Cerrar sesión
+      </button>
+
+    } @else {
+
+      <div class="card-header">
+        <h2>Dashboard</h2>
+        <p class="card-subtitle">No tenés una sesión activa</p>
+      </div>
+
+      <div class="status error">
+        <span class="dot"></span> No autenticado
+      </div>
+
+      <button class="btn-primary" routerLink="/login">
+        Ir al login
+      </button>
+
+    }
+
+  </div>
+</div>

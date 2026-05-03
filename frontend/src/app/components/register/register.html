@@ -1,0 +1,130 @@
+<div class="container">
+  <div class="card">
+
+    <div class="card-header">
+      <div class="card-logo">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0zm-3-9a9 9 0 1 0 0 18A9 9 0 0 0 12 3zm0 2a7 7 0 0 1 5.906 10.72A4.997 4.997 0 0 0 13 13.1V13a1 1 0 0 0-2 0v.1a4.997 4.997 0 0 0-4.906 2.62A7 7 0 0 1 12 5z"/>
+        </svg>
+      </div>
+      <h2>Crear cuenta</h2>
+      <p class="subtitle">Completá tus datos para registrarte</p>
+    </div>
+
+    @if (errorMessage) {
+      <div class="alert alert-error">⚠ {{ errorMessage }}</div>
+    }
+    @if (successMessage) {
+      <div class="alert alert-success">✓ {{ successMessage }}</div>
+    }
+
+    <form (ngSubmit)="onRegister($event)">
+
+      <!-- USERNAME -->
+      <div class="form-group">
+        <label for="username">Usuario</label>
+        <input
+          id="username"
+          type="text"
+          placeholder="Ej: maria_aquino"
+          name="username"
+          [(ngModel)]="username"
+          (blur)="validateUsername()"
+          [class.input-error]="usernameError"
+          [class.input-valid]="username && !usernameError"
+        />
+        <!-- (blur): se llama cuando el usuario sale del campo -->
+        @if (usernameError) {
+          <span class="field-error">{{ usernameError }}</span>
+        }
+      </div>
+
+      <!-- EMAIL -->
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          placeholder="tu@email.com"
+          name="email"
+          [(ngModel)]="email"
+          (blur)="validateEmail()"
+          [class.input-error]="emailError"
+          [class.input-valid]="email && !emailError"
+        />
+        @if (emailError) {
+          <span class="field-error">{{ emailError }}</span>
+        }
+      </div>
+
+      <!-- PASSWORD -->
+      <div class="form-group">
+        <label for="password">Contraseña</label>
+        <input
+          id="password"
+          type="password"
+          placeholder="Mínimo 8 caracteres"
+          name="password"
+          [(ngModel)]="password"
+          (input)="validatePassword()"
+          [class.input-error]="passwordError"
+          [class.input-valid]="password && !passwordError && passwordStrength >= 2"
+        />
+        
+        <!-- INDICADOR DE FORTALEZA -->
+        @if (password) {
+          <div class="strength-bar">
+            <div class="strength-bar-inner"
+              [style.width.%]="passwordStrength * 33"
+              [style.background]="passwordStrengthColor">
+            </div>
+          </div>
+          <span class="strength-label" [style.color]="passwordStrengthColor">
+            {{ passwordStrengthLabel }}
+          </span>
+        }
+
+        @if (passwordError) {
+          <span class="field-error">{{ passwordError }}</span>
+        }
+      </div>
+
+      <!-- CONFIRM PASSWORD -->
+      <div class="form-group">
+        <label for="confirmPassword">Confirmar contraseña</label>
+        <input
+          id="confirmPassword"
+          type="password"
+          placeholder="Repetí la contraseña"
+          name="confirmPassword"
+          [(ngModel)]="confirmPassword"
+          (input)="validateConfirmPassword()"
+          [class.input-error]="confirmPasswordError"
+          [class.input-valid]="confirmPassword && !confirmPasswordError"
+        />
+        @if (confirmPasswordError) {
+          <span class="field-error">{{ confirmPasswordError }}</span>
+        }
+      </div>
+
+      <button
+        class="btn-primary"
+        type="submit"
+        [disabled]="isLoading || !isFormValid">
+        @if (isLoading) {
+          <span class="spinner"></span> Creando cuenta...
+        } @else {
+          Crear cuenta
+        }
+      </button>
+
+    </form>
+
+    <hr class="divider">
+
+    <a routerLink="/login" class="btn-link">
+      ¿Ya tenés cuenta? Iniciá sesión
+    </a>
+
+  </div>
+</div>
