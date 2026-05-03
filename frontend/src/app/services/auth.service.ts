@@ -45,7 +45,7 @@ export class AuthService {
   });
 }
 
-  register(data: { username: string; email: string; password: string }) {
+  register(data: { username: string; email: string; password: string; full_name: string }) {
   return this.http.post(`${this.apiUrl}/register/`, data);
 }
 
@@ -66,4 +66,4 @@ export class AuthService {
   getProfile() {
     return this.http.get(`${this.apiUrl}/profile/`); 
   }
-}
+} 

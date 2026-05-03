@@ -12,6 +12,7 @@ import { Router, RouterLink } from '@angular/router';
 })
 export class Register {
 
+  fullName: string = '';
   username: string = '';
   email: string = '';
   password: string = '';
@@ -21,15 +22,13 @@ export class Register {
   errorMessage: string = '';
   successMessage: string = '';
 
-  // ESTADOS DE VALIDACIÓN  
+  fullNameError: string = '';
   usernameError: string = '';
   emailError: string = '';
   passwordError: string = '';
   confirmPasswordError: string = '';
 
-  // FUERZA DE CONTRASEÑA 
   passwordStrength: number = 0;
-  // 0 = vacía | 1 = débil | 2 = media | 3 = fuerte
   passwordStrengthLabel: string = '';
   passwordStrengthColor: string = '';
 
@@ -38,14 +37,23 @@ export class Register {
     private router: Router
   ) {}
 
-  // VALIDACIONES EN TIEMPO REAL
+  validateFullName() {
+    if (!this.fullName) {
+      this.fullNameError = 'El nombre completo es obligatorio.';
+    } else if (this.fullName.trim().split(' ').length < 2) {
+      this.fullNameError = 'Ingresá nombre y apellido.';
+    } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s'-]+$/.test(this.fullName)) {
+      this.fullNameError = ' Solo letras, sin números ni caracteres especiales.';
+    }
+  }
+
   validateUsername() {
-        if (!this.username) {
+    if (!this.username) {
       this.usernameError = 'El usuario es obligatorio.';
     } else if (this.username.length < 3) {
       this.usernameError = 'Mínimo 3 caracteres.';
-    } else if (!/^[a-zA-Z0-9_]+$/.test(this.username)) {
-      this.usernameError = 'Solo letras, números y guión bajo.';
+    } else if (!/^[a-zA-Z0-9._-]+$/.test(this.username)) {
+      this.usernameError = 'Solo letras, números, punto o guión. Sin espacios.';
     } else {
       this.usernameError = '';
     }
@@ -69,37 +77,34 @@ export class Register {
       return;
     }
 
-    // CALCULAR FORTALEZA 
-    let strength = 0;
-
-    if (this.password.length >= 8) strength++;
-  
-    if (/[A-Z]/.test(this.password) && /[a-z]/.test(this.password)) strength++;
-    
-    if (/[0-9]/.test(this.password)) strength++;
-
-    if (/[^a-zA-Z0-9]/.test(this.password)) strength++;
-    
-    // Mapeamos el puntaje a nivel de fortaleza
-    if (strength <= 1) {
+    if (this.password.length < 8) {
+      this.passwordError = 'Mínimo 8 caracteres.';
       this.passwordStrength = 1;
       this.passwordStrengthLabel = 'Débil';
       this.passwordStrengthColor = '#dc2626';
-      this.passwordError = 'La contraseña es muy débil.';
-    } else if (strength === 2) {
+      return;
+    }
+
+    this.passwordError = '';
+
+    let strength = 0;
+    if (this.password.length >= 8) strength++;
+    if (/[A-Z]/.test(this.password)) strength++;
+    if (/[0-9]/.test(this.password)) strength++;
+    if (/[^a-zA-Z0-9]/.test(this.password)) strength++;
+
+    if (strength <= 2) {
+      this.passwordStrength = 1;
+      this.passwordStrengthLabel = 'Débil';
+      this.passwordStrengthColor = '#dc2626';
+    } else if (strength === 3) {
       this.passwordStrength = 2;
-      this.passwordStrengthLabel = 'Media';
+      this.passwordStrengthLabel = 'Medio';
       this.passwordStrengthColor = '#f59e0b';
-      this.passwordError = '';
     } else {
       this.passwordStrength = 3;
       this.passwordStrengthLabel = 'Fuerte';
       this.passwordStrengthColor = '#16a34a';
-      this.passwordError = '';
-    }
-
-    if (this.password.length < 8) {
-      this.passwordError = 'Mínimo 8 caracteres.';
     }
 
     if (this.confirmPassword) {
@@ -117,9 +122,10 @@ export class Register {
     }
   }
 
-  // ¿EL FORMULARIO ES VÁLIDO? 
   get isFormValid(): boolean {
     return (
+      this.fullName.trim().split(' ').length >= 2 &&
+      !this.fullNameError &&
       this.username.length >= 3 &&
       !this.usernameError &&
       this.email.includes('@') &&
@@ -134,6 +140,7 @@ export class Register {
   onRegister(event: any) {
     event.preventDefault();
 
+    this.validateFullName();
     this.validateUsername();
     this.validateEmail();
     this.validatePassword();
@@ -150,12 +157,13 @@ export class Register {
     this.authService.register({
       username: this.username,
       email: this.email,
-      password: this.password
+      password: this.password,
+      full_name: this.fullName
     }).subscribe({
       next: () => {
         this.isLoading = false;
         this.successMessage = '¡Cuenta creada! Redirigiendo al login...';
-        setTimeout(() => this.router.navigate(['/login']), 2000);
+        setTimeout(() => this.router.navigate(['/login']), 3000);
       },
       error: (err) => {
         this.isLoading = false;

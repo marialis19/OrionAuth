@@ -6,9 +6,9 @@
       <!-- Header -->
       <div class="card-header">
         <div class="avatar">
-          {{ username.charAt(0).toUpperCase() }} <!-- Muestra la primera letra del username como avatar --> 
+          {{ firstName.charAt(0).toUpperCase() }}  
         </div>
-        <h2>Hola, {{ username }}</h2>
+        <h2>Hola, {{ firstName }}</h2>
         <p class="card-subtitle">Bienvenido de vuelta</p>
       </div>
 
@@ -28,8 +28,8 @@
       @if (profile) {
         <div class="info-box">
           <div class="info-row">
-            <span class="info-label">Usuario</span>
-            <span class="info-value">{{ profile.username }}</span>
+            <span class="info-label">Nombre</span>
+            <span class="info-value">{{ profile.full_name }}</span>
           </div>
           <div class="info-row">
             <span class="info-label">Email</span>

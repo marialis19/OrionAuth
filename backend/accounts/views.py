@@ -142,5 +142,6 @@ class ProfileView(APIView):
             'id': user.id,
             'username': user.username,
             'email': user.email,
+            'full_name': user.get_full_name(),
             'date_joined': str(user.date_joined.date()),
         })

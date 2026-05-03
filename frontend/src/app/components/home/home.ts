@@ -2,10 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
 import { Router, RouterLink } from '@angular/router';
 
-interface UserProfile { 
+interface UserProfile {
   id: number;
   username: string;
   email: string;
+  full_name: string;
   date_joined: string;
 }
 
@@ -16,15 +17,13 @@ interface UserProfile {
   templateUrl: './home.html',
   styleUrl: './home.css'
 })
-export class Home implements OnInit { // interfaz de Angular que ejecuta código cuando el componente se inicializa
+export class Home implements OnInit {
 
   username: string = '';
+  firstName: string = '';
   loginTime: string = '';
-
   profile: UserProfile | null = null;
-
   isLoadingProfile: boolean = false;
-
   profileError: string = '';
 
   constructor(
@@ -51,10 +50,14 @@ export class Home implements OnInit { // interfaz de Angular que ejecuta código
       next: (data: any) => {
         this.profile = data;
         this.isLoadingProfile = false;
+        this.firstName = data.full_name
+          ? data.full_name.split(' ')[0]
+          : this.username;
       },
       error: () => {
         this.profileError = 'No se pudo cargar el perfil.';
         this.isLoadingProfile = false;
+        this.firstName = this.username;
       }
     });
   }
