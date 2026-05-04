@@ -1,38 +1,37 @@
-# Fullstack Login — Django + Angular
+# OrionAuth
 
 Sistema de autenticación seguro con JWT y recuperación de contraseña 
 mediante OTP (One-Time Password). Proyecto fullstack construido desde cero.
 
 ---
 
-## Tecnologías
+## ¿ Por qué este proyecto ?
 
-### Backend
-- Python 3.12
-- Django 6
-- Django REST Framework
-- SimpleJWT — autenticación con tokens JWT
-- SQLite — base de datos de desarrollo
+Básicamente quise entender cómo funciona la autenticació real, no sólo un login básico sino el flujo completo: tokens, expiración, recuperación segura de cuenta. Ir entendiendo a medida de probar el flujo.
 
-### Frontend
-- Angular 21 (standalone components)
-- TypeScript
-- RxJS — manejo de Observables
+---   
+
+## Stack Tecnológico
+
+**Backend** - Python 3.12 - Django 6 + Django REST Framework - SimpleJWT — autenticación con tokens JWT - SQLite (desarrollo)
+
+**Frontend** — Angular 21 (standalone components) + TypeScript - RxJS — manejo de Observables
 
 ---
 
 ## Funcionalidades
 
 ### Autenticación
-- Registro de usuarios
-- Login con JWT (access token + refresh token)
+- Registro de usuarios con nombre completo, usuario y validación de contraseña en tiempo real
+- Login con JWT — access token (60 min) + refresh token (1 día)
+- "Recordarme" - extiende el refresh token a 30 días
 - Logout con limpieza de tokens
 - Protección de rutas con Guard
 
 ### Seguridad
 - Contraseñas hasheadas con PBKDF2 (nunca en texto plano)
 - Tokens JWT con expiración configurable
-- OTP generado con `secrets` (criptográficamente seguro)
+- OTP generado con `secrets`
 - CORS configurado
 
 ### Recuperación de contraseña
@@ -44,40 +43,37 @@ mediante OTP (One-Time Password). Proyecto fullstack construido desde cero.
 
 ---
 
-## Estructura del proyecto
+## Decisiones de Seguridad
 
-fullstack_login/
-├── backend/                  ← Django REST API
-│   ├── accounts/
-│   │   ├── models.py         ← Modelo PasswordResetOTP
-│   │   ├── serializers.py    ← Validación de datos
-│   │   ├── views.py          ← Lógica de endpoints
-│   │   └── urls.py           ← Rutas de la API
-│   ├── config/
-│   │   └── settings.py       ← Configuración del proyecto
-│   └── manage.py
-│
-└── frontend/                 ← Angular App
-└── src/
-└── app/
-├── components/
-│   ├── login/    ← 4 pantallas en un componente
-│   └── home/     ← Dashboard con datos del usuario
-├── services/
-│   └── auth.service.ts
-└── auth.guard.ts ← Protección de rutas
+**OTP en consola en vez de email real**  
+En producción esto sería un email. Lo simulé en consola para no depender
+de un servidor SMTP y mantener el foco en el flujo de seguridad.
 
----
+**`secrets` en vez de `random` para generar el OTP**  
+`random` en Python no es criptográficamente seguro — puede predecirse.
+`secrets` usa el generador del sistema operativo, diseñado para este tipo de casos.
+
+**JWT stateless**  
+El servidor no guarda sesiones. El token se verifica en cada request
+sin tocar la base de datos — más escalable y es el estándar de la industria.
+
+**Nombre completo separado del username**  
+El username es el identificador técnico (sin espacios, sin caracteres especiales).
+El nombre completo es para personalizar la experiencia — como lo hacen Gmail o Notion.
+
+--- 
 
 ## Endpoints de la API
 
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
-| POST | `/api/register/` | Registro de usuario |
-| POST | `/api/login/` | Login — devuelve JWT |
-| POST | `/api/request-otp/` | Solicitar código OTP |
-| POST | `/api/verify-otp/` | Verificar código OTP |
-| POST | `/api/reset-password/` | Restablecer contraseña |
+| POST | `/api/register/` | Crear cuenta |
+| POST | `/api/login/` | Login — devuelve access + refresh token |
+| GET  | `/api/profile/` | Datos del usuario autenticado |
+| POST | `/api/request-otp/` | Solicitar código de recuperación |
+| POST | `/api/verify-otp/` | Verificar el código |
+| POST | `/api/reset-password/` | Cambiar contraseña |
+| POST | `/api/token/refresh/` | Renovar access token |
 
 ---
 
@@ -97,14 +93,11 @@ pip install -r requirements.txt
 # 3. Aplicar migraciones
 python manage.py migrate
 
-# 4. Crear superusuario (opcional, para el admin)
-python manage.py createsuperuser
-
-# 5. Correr el servidor
+# 4. Correr el servidor
 python manage.py runserver
 ```
 
-El backend queda disponible en `http://127.0.0.1:8000`
+Disponible en `http://127.0.0.1:8000`
 
 ### Frontend
 
@@ -116,51 +109,32 @@ npm install
 npm start
 ```
 
-El frontend queda disponible en `http://localhost:4200`
+Disponible en `http://localhost:4200`
 
 ---
 
-## Flujo de autenticación
+## Estructura
 
-Usuario      Angular          Django
-│         │               │
-│── ingresa credenciales─►│                         │
-│         │── POST /api/login/ ────►│
-│                         │── verifica usuario
-│                         │── genera JWT
-│         │◄── { access, refresh } ─│
-│         │── guarda en localStorage │
-│◄── redirige a /home               │
-
----
-
-## Flujo de recuperación de contraseña
-
-1. Usuario ingresa email↓
-2. POST /api/request-otp/ Django genera OTP → lo mprime en consola↓
-3. Usuario ingresa el código de 6 dígitos↓
-4. POST /api/verify-otp/Django verifica que el código sea válido y no haya expirado↓
-5. Usuario ingresa nueva contraseña↓
-6. POST /api/reset-password/Django cambia la contraseña y marca el OTP como usado↓
-7. Redirige al login automáticamente
-
-
----
-
-## Decisiones de seguridad
-
-**¿Por qué OTP y no link por email?**
-El OTP expira en 10 minutos y solo puede usarse una vez. 
-Es más simple de implementar sin servidor de emails y 
-demuestra el mismo concepto de seguridad.
-
-**¿Por qué JWT?**
-Es el estándar de la industria para APIs REST. 
-Stateless — el servidor no necesita guardar sesiones.
-
-**¿Por qué `secrets` en vez de `random`?**
-`secrets` usa el generador de números aleatorios del sistema operativo, 
-diseñado para uso criptográfico. `random` es predecible en ciertos contextos.
+OrionAuth/
+├── backend/
+│   ├── accounts/
+│   │   ├── models.py       → modelo OTP
+│   │   ├── serializers.py  → validación de datos
+│   │   ├── views.py        → lógica de cada endpoint
+│   │   └── urls.py         → rutas
+│   └── config/
+│       └── settings.py     → configuración general
+│
+└── frontend/
+└── src/app/
+├── components/
+│   ├── login/       → 4 pantallas (login, forgot, verify, reset)
+│   ├── register/    → registro con validaciones en tiempo real
+│   └── home/        → dashboard con datos del perfil
+├── services/
+│   └── auth.service.ts → todas las llamadas a la API
+├── auth.guard.ts    → protección de rutas
+└── auth.interceptor.ts → agrega el token a cada request
 
 ---
 
