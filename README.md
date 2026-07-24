@@ -29,10 +29,22 @@ Básicamente quise entender cómo funciona la autenticació real, no sólo un lo
 - Protección de rutas con Guard
 
 ### Seguridad
-- Contraseñas hasheadas con PBKDF2 (nunca en texto plano)
-- Tokens JWT con expiración configurable
-- OTP generado con `secrets`
-- CORS configurado
+Además de la autenticación con JWT y verificación en dos pasos (OTP), 
+audité el proyecto contra el OWASP API Security Top 10 y implementé 
+las siguientes mejoras:
+
+- **Rate limiting** en los endpoints de login y recuperación de contraseña, 
+  para evitar ataques de fuerza bruta sobre el OTP.
+- **Rotación de refresh tokens**: cada renovación invalida el token anterior, 
+  reduciendo el impacto si un token es interceptado.
+- **Access tokens de vida corta** (20 min) en vez de una sesión larga sin control.
+- **Manejo de errores sin filtrado de información**: los endpoints de login y 
+  recuperación de contraseña no revelan si un email existe o no en el sistema.
+- **Validación de contraseñas** con las reglas de seguridad de Django 
+  (longitud mínima, no comunes, no solo numéricas) también en el registro.
+- **Configuración separada por entorno**: claves y credenciales fuera del 
+  código fuente, usando variables de entorno.
+- **CORS restringido** al dominio del frontend, en vez de aceptar cualquier origen.
 
 ### Recuperación de contraseña
 - Flujo completo de 4 pasos:
@@ -67,13 +79,12 @@ El nombre completo es para personalizar la experiencia — como lo hacen Gmail o
 
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
-| POST | `/api/register/` | Crear cuenta |
-| POST | `/api/login/` | Login — devuelve access + refresh token |
+| POST | `/api/register/` | registro de usuario |
+| POST | `/api/login/` | inicio de sesión |
 | GET  | `/api/profile/` | Datos del usuario autenticado |
 | POST | `/api/request-otp/` | Solicitar código de recuperación |
 | POST | `/api/verify-otp/` | Verificar el código |
 | POST | `/api/reset-password/` | Cambiar contraseña |
-| POST | `/api/token/refresh/` | Renovar access token |
 
 ---
 
@@ -109,32 +120,7 @@ npm install
 npm start
 ```
 
-Disponible en `http://localhost:4200`
-
----
-
-## Estructura
-
-OrionAuth/
-├── backend/
-│   ├── accounts/
-│   │   ├── models.py       → modelo OTP
-│   │   ├── serializers.py  → validación de datos
-│   │   ├── views.py        → lógica de cada endpoint
-│   │   └── urls.py         → rutas
-│   └── config/
-│       └── settings.py     → configuración general
-│
-└── frontend/
-└── src/app/
-├── components/
-│   ├── login/       → 4 pantallas (login, forgot, verify, reset)
-│   ├── register/    → registro con validaciones en tiempo real
-│   └── home/        → dashboard con datos del perfil
-├── services/
-│   └── auth.service.ts → todas las llamadas a la API
-├── auth.guard.ts    → protección de rutas
-└── auth.interceptor.ts → agrega el token a cada request
+Disponible en `http://localhost:4200`t
 
 ---
 

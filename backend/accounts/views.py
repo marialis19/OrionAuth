@@ -13,12 +13,15 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
 from rest_framework.permissions import IsAuthenticated 
+from .throttles import OTPThrottle, LoginThrottle, RegisterThrottle, VerifyOTPThrottle
 
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
+    throttle_classes = [RegisterThrottle]
 
 class LoginView(APIView):
+    throttle_classes = [LoginThrottle]
     def post(self, request):
         username = request.data.get('username')
         password = request.data.get('password')
@@ -43,26 +46,25 @@ class LoginView(APIView):
             )
         
 class RequestOTPView(APIView):
+    throttle_classes = [OTPThrottle]
     def post(self, request):
         email = request.data.get('email')
 
         try:
             user = User.objects.get(email=email)
+            otp = PasswordResetOTP.create_otp(user)
+
+            print(f"OTP para {user.username}: {otp.otp}")  
+
         except User.DoesNotExist:
-            return Response(
-                {'error': 'Usuario no encontrado'},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        otp_obj = PasswordResetOTP.create_otp(user) 
-
-        print(f"OTP para {user.username}: {otp_obj.otp}")
+            pass # No revelamos si el usuario existe o no
 
         return Response({
-            'message': 'OTP enviado (ver consola)'
+            "message": "Si el email está registrado, recibirás un código de verificación"
         })
     
 class VerifyOTPView(APIView):
+    throttle_classes = [VerifyOTPThrottle]
     def post(self, request):
         email = request.data.get('email')
         otp = request.data.get('otp')
@@ -92,6 +94,7 @@ class VerifyOTPView(APIView):
             )
         
 class ResetPasswordView(APIView):
+    throttle_classes = [OTPThrottle]
     def post(self, request):
         email = request.data.get('email') 
         otp = request.data.get('otp')
